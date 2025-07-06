@@ -1,1 +1,1 @@
-"# Unstructured Inputs to Structured Outputs Research" 
+# Unstructured Inputs to Structured Outputs Research
