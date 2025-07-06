@@ -46,32 +46,7 @@ class DocumentTransformer:
         
     
     
-    def extract_text_from_image(self, image_path: str) -> str:
-        """
-        Extract text from image using OCR
-        
-        Args:
-            image_path: Path to the image file
-            
-        Returns:
-            Extracted text
-        """
-        try:
-            # Preprocess image
-            processed_img = self.preprocess_image(image_path)
-            
-            # Convert numpy array to PIL Image
-            pil_img = Image.fromarray(processed_img)
-            
-            # Perform OCR with custom config
-            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?;:()[]{}"-/\n '
-            text = pytesseract.image_to_string(pil_img, config=custom_config)
-            
-            return text.strip()
-            
-        except Exception as e:
-            logger.error(f"Error extracting text from image {image_path}: {str(e)}")
-            return ""
+
     
     
     def structure_content_with_ai(self, text: str) -> Dict[str, Any]:
@@ -268,14 +243,35 @@ def preprocess_image(image_path):
     # print(f"Cleaned image saved to {output_path}")
 
     # Display the cleaned image
-    cv2.imshow("Cleaned Image", cleaned)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.imshow("Cleaned Image", cleaned)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
     return cleaned
+
+
+def extract_text_from_image(image_path: str) -> str:
+
+    # Preprocess image
+    processed_img = preprocess_image(image_path)
+    
+    # Convert numpy array to PIL Image 
+    pil_img = Image.fromarray(processed_img)
+    
+    # Perform OCR with custom config
+    custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?;:()[]{}"-/\n '
+    text = pytesseract.image_to_string(pil_img, config=custom_config)
+
+    with open("text_extract/{}.txt".format(os.path.splitext(os.path.basename(image_path))[0]), "w") as file:
+        file.write(text)
+        
+    
+    return text.strip()
+
 
     
 
 
 image_path = "images\prescription1.jpg"
-print(preprocess_image(image_path))
+
+print(extract_text_from_image(image_path))
