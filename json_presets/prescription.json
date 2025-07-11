@@ -1,0 +1,15 @@
+{
+  "document_type": "prescription",
+  "patient_name": "",
+  "doctor_name": "",
+  "date": "",
+  "medications": [
+    {
+      "name": "",
+      "dosage": "",
+      "frequency": "",
+      "duration": ""
+    }
+  ],
+  "instructions": ""
+} 

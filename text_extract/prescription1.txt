@@ -1,13 +1,18 @@
-DEAHGB05455616 . LIC976269
-. MEDICALCENTRE :
-- 82414"Street .
-NewYork,NY91743,USA, .
-NAME Joba Smith AGE BY:
-Appress/6Z Exemple stMfix pareO9-l-1Z
-oBetaloe 100mg-1tabBID .
-Dorzalahidum 10 y- Itab BD .
-Cimetidine5SO mg-Z tebsTIP
-OrprelelSOmg-1tabQD. .
-3 : ; Ssignature
-]OLABEL 2S o
-[REFILL0(D2.374-5PRN axauoeeseen
+DEAGB05455616 LIC4976269
+MEDICALCENTRE
+82414"Street
+NewYork,NY91743,USA
+NAMEEouAlSaine) ace
+appress/6Z Example stW7 pate09-/-IZ
+Betsloe100mg-1tabBID
+Dorzelamidum 10 aE) / tab BD
+GrettclieSO mg-Z t.bsTID
+Oxprelol 50mg eitabQQ
+S DeSiauelnen
+i signature
+z OLABEL
+SJCREFILL-0(123.45PRN
+g WIX.N-PRESC-T
+a 1-889-422-0700
+a
+3

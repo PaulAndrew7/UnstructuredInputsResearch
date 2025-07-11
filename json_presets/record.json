@@ -1,0 +1,16 @@
+{
+  "document_type": "record",
+  "patient_name": "",
+  "date_of_birth": "",
+  "date": "",
+  "doctor_name": "",
+  "diagnosis": "",
+  "treatment": "",
+  "notes": "",
+  "vitals": {
+    "bp": "",
+    "pulse": "",
+    "temperature": ""
+  },
+  "lab_results": []
+} 
