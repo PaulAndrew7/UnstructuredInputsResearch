@@ -4,6 +4,7 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
+import requests
 
 
 def preprocess_image(image_path):
@@ -100,52 +101,47 @@ def load_json_preset(doc_type):
     with open(preset_path, 'r') as f:
         return json.load(f)
 
-def map_text_to_json(text, doc_type):
-    preset = load_json_preset(doc_type)
-    if not preset:
+def ollama_map_text_to_json(text, doc_type):
+    prompt = f"""
+You are an expert at extracting structured data from unstructured text.
+Given the following document type: {doc_type}.
+Extract all relevant fields and their values from the text below and return them as a JSON object. Use field names that make sense for this document type. If a field is missing, omit it.
+
+Text:
+{text}
+
+Return only the JSON object.
+"""
+    print("=== PROMPT SENT TO MODEL ===")
+    print(prompt)
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "mistral",  # or "phi", "llama2", etc.
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+    result = response.json()
+    print("=== RAW MODEL RESPONSE ===")
+    print(result['response'])
+    import re
+    match = re.search(r'({[\s\S]*})', result['response'])
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except Exception as e:
+            print(f"Error parsing JSON: {e}")
+            return None
+    else:
         return None
-    # Simple keyword-based extraction (can be improved with NLP)
-    lines = text.split('\n')
-    text_lower = text.lower()
-    if doc_type == 'prescription':
-        for line in lines:
-            if 'patient' in line.lower():
-                preset['patient_name'] = line.split(':')[-1].strip()
-            if 'doctor' in line.lower() or 'dr.' in line.lower():
-                preset['doctor_name'] = line.split(':')[-1].strip()
-            if 'date' in line.lower():
-                preset['date'] = line.split(':')[-1].strip()
-            if any(med_kw in line.lower() for med_kw in ['tablet', 'capsule', 'mg']):
-                med = {'name': '', 'dosage': '', 'frequency': '', 'duration': ''}
-                med['name'] = line.strip()
-                preset['medications'][0] = med
-            if 'instructions' in line.lower():
-                preset['instructions'] = line.split(':')[-1].strip()
-    elif doc_type == 'record':
-        for line in lines:
-            if 'patient' in line.lower():
-                preset['patient_name'] = line.split(':')[-1].strip()
-            if 'doctor' in line.lower() or 'dr.' in line.lower():
-                preset['doctor_name'] = line.split(':')[-1].strip()
-            if 'date of birth' in line.lower():
-                preset['date_of_birth'] = line.split(':')[-1].strip()
-            if 'date' in line.lower():
-                preset['date'] = line.split(':')[-1].strip()
-            if 'diagnosis' in line.lower():
-                preset['diagnosis'] = line.split(':')[-1].strip()
-            if 'treatment' in line.lower():
-                preset['treatment'] = line.split(':')[-1].strip()
-            if 'notes' in line.lower():
-                preset['notes'] = line.split(':')[-1].strip()
-            if 'bp' in line.lower():
-                preset['vitals']['bp'] = line.split(':')[-1].strip()
-            if 'pulse' in line.lower():
-                preset['vitals']['pulse'] = line.split(':')[-1].strip()
-            if 'temperature' in line.lower():
-                preset['vitals']['temperature'] = line.split(':')[-1].strip()
-            if 'lab' in line.lower() or 'result' in line.lower():
-                preset['lab_results'].append(line.strip())
-    return preset
+
+def map_text_to_json(text, doc_type):
+    # Use AI-based extraction only, let the model decide the fields
+    ai_result = ollama_map_text_to_json(text, doc_type)
+    if ai_result:
+        return ai_result
+    return None
 
 
 def main_process(image_path):
@@ -154,6 +150,14 @@ def main_process(image_path):
     print("Document Type: ", doc_type)
     structured_json = map_text_to_json(text, doc_type)
     print("Structured JSON: ", structured_json)
+    # Export to JSON file
+    if structured_json:
+        os.makedirs('extracted_jsons', exist_ok=True)
+        image_filename = os.path.splitext(os.path.basename(image_path))[0]
+        output_path = os.path.join('extracted_jsons', f'{image_filename}.json')
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(structured_json, f, ensure_ascii=False, indent=2)
+        print(f"Structured JSON exported to {output_path}")
     return text, doc_type, structured_json
 
 
