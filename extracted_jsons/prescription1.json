@@ -1,6 +1,6 @@
 {
-  "PrescriptionID": "DEAGB05455616",
-  "LicenceNumber": "LIC4976269",
+  "PrescriptionId": "DEAGB05455616",
+  "IssuingEntityId": "LIC4976269",
   "PharmacyName": "MEDICALCENTRE",
   "PharmacyAddress": {
     "Street": "82414\"Street",
@@ -9,42 +9,31 @@
     "ZipCode": "91743",
     "Country": "USA"
   },
-  "PatientName": "Eou Al Saine",
-  "PrescriptionDrugs": [
+  "PatientName": "EouAlSaine)",
+  "Medications": [
     {
-      "DrugName": "ace appress/6Z Example stW7 pate09-/-IZ",
+      "Name": "ace appress/6Z Example stW7 pate09-/-IZ",
       "DosageForm": "Betsloe100mg-1tab",
       "Frequency": "BID"
     },
     {
-      "DrugName": "Dorzelamidum",
-      "Strength": "10",
+      "Name": "Dorzelamidum 10 aE)",
       "DosageForm": "/ tab",
       "Frequency": "BD"
     },
     {
-      "DrugName": "Grettclie",
-      "Strength": "mg-Z",
-      "Route": "t.bs",
-      "Frequency": "TID"
+      "Name": "GrettclieSO mg-Z",
+      "DosageForm": "t.bsTID"
     },
     {
-      "DrugName": "Oxprelol",
-      "Strength": "50mg",
-      "DosageForm": "eitab",
-      "PrescriptionQuantity": "QQ"
+      "Name": "Oxprelol 50mg eitab",
+      "Qty": "QQ"
     }
   ],
   "PrescribingDoctor": "S DeSiauelnen",
-  "Signature": {
-    "PrescriberSignature": "i signature",
-    "Label": "z OLABEL"
-  },
-  "PrescriptionReference": "SJCREFILL-0(123.45PRN",
-  "ContactDetails": {
-    "PhoneNumber": "(123.45)",
-    "HelpLine": "WIX.N-PRESC-T",
-    "SupportLine": "a 1-889-422-0700"
-  },
-  "PrescriptionInstructions": "3"
+  "Signature": "i signature",
+  "Label": "z OLABEL",
+  "PrescriptionNumber": "SJCREFILL-0(123.45PRN",
+  "PhoneNumber": "a 1-889-422-0700",
+  "Version": "3"
 }

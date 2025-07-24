@@ -5,6 +5,7 @@ from PIL import Image
 import cv2
 import numpy as np
 import requests
+import demjson3
 
 
 def preprocess_image(image_path):
@@ -128,11 +129,7 @@ Return only the JSON object.
     import re
     match = re.search(r'({[\s\S]*})', result['response'])
     if match:
-        try:
-            return json.loads(match.group(1))
-        except Exception as e:
-            print(f"Error parsing JSON: {e}")
-            return None
+        return safe_json_loads(match.group(1))
     else:
         return None
 
@@ -142,6 +139,61 @@ def map_text_to_json(text, doc_type):
     if ai_result:
         return ai_result
     return None
+
+def summarize_data(structured_json):
+    import requests
+    prompt = f"""
+Summarize the following structured data in 100-150 words, highlighting the key content, topics covered, or instructions mentioned. Write in clear, professional language.
+
+Data:
+{json.dumps(structured_json, indent=2)}
+"""
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "mistral",  # or "phi", "llama2", etc.
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+    result = response.json()
+    import re
+    match = re.search(r'(?s)\n*(.*)', result.get('response', ''))
+    if match:
+        return match.group(1).strip()
+    return None
+
+
+def create_pdf_from_json(structured_json, summary, output_path):
+    from fpdf import FPDF
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, f"Document Type: {structured_json.get('document_type', 'Unknown')}", ln=True)
+    pdf.set_font("Arial", '', 12)
+    pdf.ln(5)
+    pdf.multi_cell(0, 10, f"Summary:\n{summary}")
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "Extracted Data:", ln=True)
+    pdf.set_font("Arial", '', 12)
+    def render_json(data, indent=0):
+        if isinstance(data, dict):
+            for k, v in data.items():
+                pdf.cell(indent * 5)
+                pdf.multi_cell(0, 8, f"{k}:" if not isinstance(v, (dict, list)) else f"{k}:")
+                render_json(v, indent + 1)
+        elif isinstance(data, list):
+            for idx, item in enumerate(data):
+                pdf.cell(indent * 5)
+                pdf.multi_cell(0, 8, f"- Item {idx+1}:")
+                render_json(item, indent + 1)
+        else:
+            pdf.cell(indent * 5)
+            pdf.multi_cell(0, 8, str(data))
+    render_json(structured_json, indent=1)
+    pdf.output(output_path)
 
 
 def main_process(image_path):
@@ -154,14 +206,38 @@ def main_process(image_path):
     if structured_json:
         os.makedirs('extracted_jsons', exist_ok=True)
         image_filename = os.path.splitext(os.path.basename(image_path))[0]
-        output_path = os.path.join('extracted_jsons', f'{image_filename}.json')
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_json_path = os.path.join('extracted_jsons', f'{image_filename}.json')
+        with open(output_json_path, 'w', encoding='utf-8') as f:
             json.dump(structured_json, f, ensure_ascii=False, indent=2)
-        print(f"Structured JSON exported to {output_path}")
+        print(f"Structured JSON exported to {output_json_path}")
+        # Summarize
+        summary = summarize_data(structured_json)
+        summary_path = os.path.join('extracted_jsons', f'{image_filename}_summary.txt')
+        with open(summary_path, 'w', encoding='utf-8') as f:
+            f.write(summary)
+        print(f"Summary exported to {summary_path}")
+        # Create PDF
+        pdf_path = os.path.join('extracted_jsons', f'{image_filename}.pdf')
+        create_pdf_from_json(structured_json, summary, pdf_path)
+        print(f"PDF exported to {pdf_path}")
+    else:
+        summary = None
     return text, doc_type, structured_json
 
+def safe_json_loads(s):
+    try:
+        return json.loads(s)
+    except Exception as e:
+        print(f"Standard json.loads failed: {e}")
+        try:
+            return demjson3.decode(s)
+        except Exception as e2:
+            print(f"demjson3.decode also failed: {e2}")
+            return None
 
 # examples
 
 print(main_process("images\prescription1.jpg"))
 print(main_process("images\prescription2.png"))
+
+

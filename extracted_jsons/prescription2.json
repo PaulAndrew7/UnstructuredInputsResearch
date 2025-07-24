@@ -1,15 +1,23 @@
 {
-  "document_type": "prescription",
-  "patient_name": "",
-  "doctor_name": "",
-  "date": "",
-  "medications": [
-    {
-      "name": "",
-      "dosage": "",
-      "frequency": "",
-      "duration": ""
-    }
-  ],
-  "instructions": ""
+  "PrescriptionID": "DDony1289",
+  "DateIssued": "1NOV/71",
+  "PrescriptionType": "DODPRESCRIPTION",
+  "DoctorName": "SeneeaePNOU",
+  "PatientFullname": "(missing)",
+  "Address": "(missing)",
+  "PhoneNumber": "(missing)",
+  "Age": "(missing)",
+  "MedicationName": "Talludeyra",
+  "Dosage": "120ene",
+  "Frequency": "DOS y AM SOS Ne",
+  "Instructions": "(missing)",
+  "PrescribingFacility": "US.S.Neverforgotten(bb/78)",
+  "DateOfMedicalFacility": "US.S.Weverforgotten(00/78) 2JanI9",
+  "PurposeOfVisit": "(missing)",
+  "BrandName": "BR (Superscription) gmorml.",
+  "Manufacturer": "MFGR: eth",
+  "BatchNumber": "LOTNO:39K/06",
+  "PharmacistName": "(missing)",
+  "PrescriptionNumber": "S/N0102-LF-012-6201",
+  "EditionOf": "EDITIONOF1JAN60MAYBEUSEDFOR"
 }

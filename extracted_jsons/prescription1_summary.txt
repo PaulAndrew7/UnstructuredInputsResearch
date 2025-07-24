@@ -1,0 +1,9 @@
+This structured data represents a prescription with the unique identifier DEAGB05455616, issued by LIC4976269. The prescribed medications are to be obtained from MEDICALCENTRE located at 82414 "Street", NewYork, NY 91743, USA.
+
+The patient named EouAlSaine is to take four different medications:
+1. Ace appress/6Z Example stW7 pate09-/-IZ in the dosage form of Betsloe100mg-1tab, twice a day (BID).
+2. Dorzelamidum 10 aE in the dosage form of / tab, to be administered four times a day (BD).
+3. GrettclieSO mg-Z, dosage form t.bsTID.
+4. Oxprelol 50mg eitab with quantity QQ.
+
+The prescription was issued by Dr. S DeSiauelnen and bears the signature "i signature". The prescription number is SJCREFILL-0(123.45PRN, and the pharmacy's contact number is 1-889-422-0700. This is the third version of the prescription. The label for the medication is z OLABEL.
