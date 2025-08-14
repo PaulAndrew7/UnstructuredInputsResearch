@@ -1,39 +1,46 @@
 {
-  "PrescriptionId": "DEAGB05455616",
-  "IssuingEntityId": "LIC4976269",
-  "PharmacyName": "MEDICALCENTRE",
-  "PharmacyAddress": {
-    "Street": "82414\"Street",
-    "City": "NewYork",
-    "State": "NY",
-    "ZipCode": "91743",
-    "Country": "USA"
+  "document_type": "prescription",
+  "prescription_id": "DEAGB05455616",
+  "issuer_license_number": "LIC4976269",
+  "issuing_facility_name": "MEDICALCENTRE",
+  "issuing_facility_address": {
+    "street": "82414'Street",
+    "city": "NewYork",
+    "state": "NY",
+    "zip_code": "91743",
+    "country": "USA"
   },
-  "PatientName": "EouAlSaine)",
-  "Medications": [
+  "patient_name": "EouAlSaine",
+  "medications": [
     {
-      "Name": "ace appress/6Z Example stW7 pate09-/-IZ",
-      "DosageForm": "Betsloe100mg-1tab",
-      "Frequency": "BID"
+      "brand_name": "ace",
+      "dosage_form": "tab",
+      "strength": "100mg",
+      "frequency_qty": "BID"
     },
     {
-      "Name": "Dorzelamidum 10 aE)",
-      "DosageForm": "/ tab",
-      "Frequency": "BD"
+      "brand_name": "Dorzelamidum",
+      "dosage_form": "tab",
+      "frequency": "BD"
     },
     {
-      "Name": "GrettclieSO mg-Z",
-      "DosageForm": "t.bsTID"
+      "brand_name": "Grettclie",
+      "strength": "SO mg",
+      "route_of_administration": "t.bsTID"
     },
     {
-      "Name": "Oxprelol 50mg eitab",
-      "Qty": "QQ"
+      "brand_name": "Oxprelol",
+      "strength": "50mg",
+      "dosage_form": "tab",
+      "frequency": "QQ"
     }
   ],
-  "PrescribingDoctor": "S DeSiauelnen",
-  "Signature": "i signature",
-  "Label": "z OLABEL",
-  "PrescriptionNumber": "SJCREFILL-0(123.45PRN",
-  "PhoneNumber": "a 1-889-422-0700",
-  "Version": "3"
+  "prescribing_doctor_name": "S DeSiauelnen",
+  "prescription_signature": "i signature",
+  "prescription_label": "z OLABEL",
+  "instructions_fill_number": "PRN (123.45)",
+  "contact_information": {
+    "phone_number": "a 1-889-422-0700"
+  },
+  "version_number": "3"
 }

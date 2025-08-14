@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import requests
 import demjson3
+import glob
 
 
 def preprocess_image(image_path):
@@ -107,6 +108,7 @@ def ollama_map_text_to_json(text, doc_type):
 You are an expert at extracting structured data from unstructured text.
 Given the following document type: {doc_type}.
 Extract all relevant fields and their values from the text below and return them as a JSON object. Use field names that make sense for this document type. If a field is missing, omit it.
+Always include a field called \"document_type\" with the value \"{doc_type}\".
 
 Text:
 {text}
@@ -129,16 +131,172 @@ Return only the JSON object.
     import re
     match = re.search(r'({[\s\S]*})', result['response'])
     if match:
-        return safe_json_loads(match.group(1))
+        json_str = match.group(1)
+        # Replace curly quotes and other common LLM output issues
+        json_str = json_str.replace('“', '"').replace('”', '"').replace("‘", "'").replace("’", "'")
+        return safe_json_loads(json_str)
     else:
         return None
 
+def safe_json_loads(s):
+    try:
+        return json.loads(s)
+    except Exception as e:
+        print(f"Standard json.loads failed: {e}")
+        try:
+            return demjson3.decode(s)
+        except Exception as e2:
+            print(f"demjson3.decode also failed: {e2}")
+            print(f"Raw JSON string that failed to parse: {s}")
+            # Try to fix common issues
+            try:
+                # Remove any trailing commas before closing braces/brackets
+                import re
+                fixed_s = re.sub(r',(\s*[}\]])', r'\1', s)
+                # Try to fix missing quotes around keys
+                fixed_s = re.sub(r'(\w+):', r'"\1":', fixed_s)
+                return json.loads(fixed_s)
+            except Exception as e3:
+                print(f"Attempted fix also failed: {e3}")
+                return None
+    return None
+
+def fallback_extract_fields(text, doc_type):
+    """Fallback extraction using regex patterns if JSON parsing fails"""
+    import re
+    result = {"document_type": doc_type}
+    
+    # Extract common patterns with more comprehensive matching
+    patient_patterns = [
+        r'patient[:\s]+([^\n]+)',
+        r'name[:\s]+([^\n]+)',
+        r'patient\s+name[:\s]+([^\n]+)'
+    ]
+    for pattern in patient_patterns:
+        patient_match = re.search(pattern, text, re.IGNORECASE)
+        if patient_match:
+            result["patient_name"] = patient_match.group(1).strip()
+            break
+    
+    doctor_patterns = [
+        r'(?:doctor|dr)[:\s]+([^\n]+)',
+        r'physician[:\s]+([^\n]+)',
+        r'prescriber[:\s]+([^\n]+)'
+    ]
+    for pattern in doctor_patterns:
+        doctor_match = re.search(pattern, text, re.IGNORECASE)
+        if doctor_match:
+            result["doctor_name"] = doctor_match.group(1).strip()
+            break
+    
+    date_patterns = [
+        r'date[:\s]+([^\n]+)',
+        r'prescribed[:\s]+([^\n]+)',
+        r'issued[:\s]+([^\n]+)'
+    ]
+    for pattern in date_patterns:
+        date_match = re.search(pattern, text, re.IGNORECASE)
+        if date_match:
+            result["date"] = date_match.group(1).strip()
+            break
+    
+    # Extract medications with more detail
+    medications = []
+    
+    # Look for medication patterns
+    med_patterns = [
+        r'(\w+(?:\s+\w+)*\s+\d+mg[^\n]*)',
+        r'(\w+(?:\s+\w+)*\s+tablet[^\n]*)',
+        r'(\w+(?:\s+\w+)*\s+capsule[^\n]*)',
+        r'(\w+(?:\s+\w+)*\s+\d+\s*mg[^\n]*)',
+        r'rx[:\s]+([^\n]+)',
+        r'prescription[:\s]+([^\n]+)'
+    ]
+    
+    for pattern in med_patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for match in matches:
+            if isinstance(match, tuple):
+                match = match[0]
+            med_info = {"name": match.strip()}
+            
+            # Try to extract dosage from the same line
+            dosage_match = re.search(r'(\d+\s*mg)', match, re.IGNORECASE)
+            if dosage_match:
+                med_info["dosage"] = dosage_match.group(1)
+            
+            # Try to extract frequency
+            freq_patterns = [
+                r'(\d+\s+times?\s+(?:a\s+)?day)',
+                r'(once\s+(?:a\s+)?day)',
+                r'(twice\s+(?:a\s+)?day)',
+                r'(three\s+times?\s+(?:a\s+)?day)',
+                r'(bid|tid|qid|od|bd|hs)',
+                r'(\d+\s+times?\s+daily)'
+            ]
+            for freq_pattern in freq_patterns:
+                freq_match = re.search(freq_pattern, match, re.IGNORECASE)
+                if freq_match:
+                    med_info["frequency"] = freq_match.group(1)
+                    break
+            
+            # Try to extract duration
+            duration_match = re.search(r'for\s+(\d+\s+(?:days?|weeks?|months?))', match, re.IGNORECASE)
+            if duration_match:
+                med_info["duration"] = duration_match.group(1)
+            
+            medications.append(med_info)
+    
+    if medications:
+        result["medications"] = medications
+    
+    # Extract instructions
+    instruction_patterns = [
+        r'instructions[:\s]+([^\n]+)',
+        r'sig[:\s]+([^\n]+)',
+        r'take[:\s]+([^\n]+)',
+        r'usage[:\s]+([^\n]+)'
+    ]
+    for pattern in instruction_patterns:
+        instruction_match = re.search(pattern, text, re.IGNORECASE)
+        if instruction_match:
+            result["instructions"] = instruction_match.group(1).strip()
+            break
+    
+    # Extract pharmacy information
+    pharmacy_match = re.search(r'pharmacy[:\s]+([^\n]+)', text, re.IGNORECASE)
+    if pharmacy_match:
+        result["pharmacy"] = pharmacy_match.group(1).strip()
+    
+    # Extract refill information
+    refill_match = re.search(r'refill[:\s]+([^\n]+)', text, re.IGNORECASE)
+    if refill_match:
+        result["refill_info"] = refill_match.group(1).strip()
+    
+    # If we found very little, try to extract any line that looks like it contains data
+    if len(result) <= 2:  # Only document_type and maybe one other field
+        lines = text.split('\n')
+        for line in lines:
+            line = line.strip()
+            if ':' in line and len(line) > 5:
+                parts = line.split(':', 1)
+                if len(parts) == 2:
+                    key = parts[0].strip().lower().replace(' ', '_')
+                    value = parts[1].strip()
+                    if key not in result and value:
+                        result[key] = value
+    
+    return result
+
 def map_text_to_json(text, doc_type):
-    # Use AI-based extraction only, let the model decide the fields
     ai_result = ollama_map_text_to_json(text, doc_type)
     if ai_result:
+        if 'document_type' not in ai_result:
+            ai_result['document_type'] = doc_type
         return ai_result
-    return None
+    else:
+        print("AI extraction failed, trying fallback extraction...")
+        return fallback_extract_fields(text, doc_type)
 
 def summarize_data(structured_json):
     import requests
@@ -166,33 +324,64 @@ Data:
 
 def create_pdf_from_json(structured_json, summary, output_path):
     from fpdf import FPDF
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, f"Document Type: {structured_json.get('document_type', 'Unknown')}", ln=True)
+    pdf.cell(0, 10, f"Document Type: {structured_json.get('document_type', 'Unknown').capitalize()}", ln=True)
     pdf.set_font("Arial", '', 12)
     pdf.ln(5)
-    pdf.multi_cell(0, 10, f"Summary:\n{summary}")
+    pdf.multi_cell(0, 10, f"{summary}")
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "Extracted Data:", ln=True)
     pdf.set_font("Arial", '', 12)
-    def render_json(data, indent=0):
+    
+    def flatten_json(data, prefix=""):
+        """Flatten nested JSON into key-value pairs"""
+        items = []
         if isinstance(data, dict):
             for k, v in data.items():
-                pdf.cell(indent * 5)
-                pdf.multi_cell(0, 8, f"{k}:" if not isinstance(v, (dict, list)) else f"{k}:")
-                render_json(v, indent + 1)
+                if k == 'document_type':  # Skip document_type as it's already in header
+                    continue
+                if isinstance(v, (dict, list)):
+                    items.extend(flatten_json(v, f"{prefix}{k}_"))
+                else:
+                    items.append((f"{prefix}{k}", str(v)))
         elif isinstance(data, list):
-            for idx, item in enumerate(data):
-                pdf.cell(indent * 5)
-                pdf.multi_cell(0, 8, f"- Item {idx+1}:")
-                render_json(item, indent + 1)
+            for i, item in enumerate(data):
+                if isinstance(item, dict):
+                    items.extend(flatten_json(item, f"{prefix}item_{i+1}_"))
+                else:
+                    items.append((f"{prefix}item_{i+1}", str(item)))
+        return items
+    
+    # Get flattened data
+    flat_data = flatten_json(structured_json)
+    
+    # Create table
+    col_width = [60, 120]  # Field name width, Value width
+    row_height = 8
+    
+    # Table header
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(col_width[0], row_height, "Field", border=1)
+    pdf.cell(col_width[1], row_height, "Value", border=1, ln=True)
+    
+    # Table data
+    pdf.set_font("Arial", '', 10)
+    for field, value in flat_data:
+        # Handle long values by wrapping text
+        if len(value) > 50:  # If value is long, use multi_cell
+            pdf.cell(col_width[0], row_height, field.replace('_', ' ').title(), border=1)
+            # Calculate how many lines this value will take
+            lines = len(value) // 50 + 1
+            pdf.multi_cell(col_width[1], row_height, value, border=1)
         else:
-            pdf.cell(indent * 5)
-            pdf.multi_cell(0, 8, str(data))
-    render_json(structured_json, indent=1)
+            pdf.cell(col_width[0], row_height, field.replace('_', ' ').title(), border=1)
+            pdf.cell(col_width[1], row_height, value, border=1, ln=True)
+    
     pdf.output(output_path)
 
 
@@ -211,33 +400,40 @@ def main_process(image_path):
             json.dump(structured_json, f, ensure_ascii=False, indent=2)
         print(f"Structured JSON exported to {output_json_path}")
         # Summarize
-        summary = summarize_data(structured_json)
-        summary_path = os.path.join('extracted_jsons', f'{image_filename}_summary.txt')
-        with open(summary_path, 'w', encoding='utf-8') as f:
-            f.write(summary)
-        print(f"Summary exported to {summary_path}")
+        try:
+            summary = summarize_data(structured_json)
+            if summary:
+                summary_path = os.path.join('extracted_jsons', f'{image_filename}_summary.txt')
+                with open(summary_path, 'w', encoding='utf-8') as f:
+                    f.write(summary)
+                print(f"Summary exported to {summary_path}")
+            else:
+                print("Warning: Summary generation failed")
+                summary = "Summary generation failed"
+        except Exception as e:
+            print(f"Error generating summary: {e}")
+            summary = "Summary generation failed"
         # Create PDF
-        pdf_path = os.path.join('extracted_jsons', f'{image_filename}.pdf')
-        create_pdf_from_json(structured_json, summary, pdf_path)
-        print(f"PDF exported to {pdf_path}")
+        try:
+            pdf_path = os.path.join('extracted_jsons', f'{image_filename}.pdf')
+            create_pdf_from_json(structured_json, summary, pdf_path)
+            print(f"PDF exported to {pdf_path}")
+        except Exception as e:
+            print(f"Error creating PDF: {e}")
     else:
         summary = None
     return text, doc_type, structured_json
 
-def safe_json_loads(s):
-    try:
-        return json.loads(s)
-    except Exception as e:
-        print(f"Standard json.loads failed: {e}")
-        try:
-            return demjson3.decode(s)
-        except Exception as e2:
-            print(f"demjson3.decode also failed: {e2}")
-            return None
-
 # examples
 
-print(main_process("images\prescription1.jpg"))
-print(main_process("images\prescription2.png"))
+
+image_extensions = ("*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tiff")
+image_paths = []
+for ext in image_extensions:
+    image_paths.extend(glob.glob(os.path.join("images", ext)))
+
+for image_path in image_paths:
+    print(f"Processing: {image_path}")
+    print(main_process(image_path))
 
 

@@ -1,23 +1,24 @@
 {
-  "PrescriptionID": "DDony1289",
-  "DateIssued": "1NOV/71",
-  "PrescriptionType": "DODPRESCRIPTION",
-  "DoctorName": "SeneeaePNOU",
-  "PatientFullname": "(missing)",
-  "Address": "(missing)",
-  "PhoneNumber": "(missing)",
-  "Age": "(missing)",
-  "MedicationName": "Talludeyra",
-  "Dosage": "120ene",
-  "Frequency": "DOS y AM SOS Ne",
-  "Instructions": "(missing)",
-  "PrescribingFacility": "US.S.Neverforgotten(bb/78)",
-  "DateOfMedicalFacility": "US.S.Weverforgotten(00/78) 2JanI9",
-  "PurposeOfVisit": "(missing)",
-  "BrandName": "BR (Superscription) gmorml.",
-  "Manufacturer": "MFGR: eth",
-  "BatchNumber": "LOTNO:39K/06",
-  "PharmacistName": "(missing)",
-  "PrescriptionNumber": "S/N0102-LF-012-6201",
-  "EditionOf": "EDITIONOF1JAN60MAYBEUSEDFOR"
+  "document_type": "prescription",
+  "patient_id": "DDony1289",
+  "date_issued": "1NOV/71",
+  "prescribing_doctor": "SeneeaePNOUx2CocNboetrstrhlt!",
+  "medication": {
+    "name": "Talludeyra IS",
+    "strength": "Amphege geek 120ene"
+  },
+  "dosage": "DohinDOSyAMSOSNe",
+  "instructions": {
+    "ass": "US.S.Neverforgotten(bb/78)",
+    "other_instructions": "MEDICALFACILITY DATE, US.S.Weverforgotten(00/78) 2JanI9, BR (Superscription) gmorml., (nscription), Talludeyra ISanl, WtflFobatior/"
+  },
+  "signature": {
+    "name": "fockR.Frest",
+    "position": "40072 LODR.WD.USWR",
+    "rank_and_degree": "BNUMBER SIGNATURERANKANDDEGREE",
+    "edition": "EDITIONOF1JAN60MAYBEUSEDFOR",
+    "signature_number": "S/N0102-LF-012-6200"
+  },
+  "manufacturer": "MFGR: eth",
+  "lot_number": "LOTNO:39K/06"
 }
