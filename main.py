@@ -7,6 +7,8 @@ import numpy as np
 import requests
 import demjson3
 import glob
+from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
+from werkzeug.utils import secure_filename
 
 
 def preprocess_image(image_path):
@@ -48,6 +50,7 @@ def choose_better_text(image_path, text1, text2):
     else:
         text_to_write = text2
         return_text = 2
+    os.makedirs('text_extract', exist_ok=True)
     with open("text_extract/{}.txt".format(os.path.splitext(os.path.basename(image_path))[0]), "w") as file:
         file.write(text_to_write)
     
@@ -424,16 +427,104 @@ def main_process(image_path):
         summary = None
     return text, doc_type, structured_json
 
-# examples
+app = Flask(__name__)
 
+def ensure_directory(path):
+    os.makedirs(path, exist_ok=True)
 
-image_extensions = ("*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tiff")
-image_paths = []
-for ext in image_extensions:
-    image_paths.extend(glob.glob(os.path.join("images", ext)))
+def save_uploaded_file(uploaded_file):
+    ensure_directory('uploads')
+    filename = secure_filename(uploaded_file.filename)
+    saved_path = os.path.join('uploads', filename)
+    uploaded_file.save(saved_path)
+    return saved_path
 
-for image_path in image_paths:
-    print(f"Processing: {image_path}")
-    print(main_process(image_path))
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
 
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
+@app.route('/process', methods=['POST'])
+def process_single():
+    # Accept either multipart file upload under key 'file' or a JSON body with 'image_path'
+    image_path = None
+
+    if 'file' in request.files and request.files['file']:
+        uploaded_file = request.files['file']
+        if uploaded_file.filename:
+            image_path = save_uploaded_file(uploaded_file)
+    elif request.is_json:
+        body = request.get_json(silent=True) or {}
+        image_path = body.get('image_path')
+    else:
+        image_path = request.form.get('image_path')
+
+    if not image_path or not os.path.exists(image_path):
+        return jsonify({
+            'error': 'No valid image provided. Upload a file under key "file" or provide an existing path in "image_path".'
+        }), 400
+
+    try:
+        text, doc_type, structured_json = main_process(image_path)
+        response_payload = {
+            'image_path': image_path,
+            'document_type': doc_type,
+            'text': text,
+            'structured_json': structured_json
+        }
+        # Build file outputs for website result page
+        image_filename = os.path.splitext(os.path.basename(image_path))[0]
+        json_name = f'{image_filename}.json'
+        pdf_name = f'{image_filename}.pdf'
+        summary_name = f'{image_filename}_summary.txt'
+        return_fmt = request.headers.get('Accept', '')
+        if 'text/html' in return_fmt or request.args.get('html') == '1' or 'file' in request.files:
+            return render_template(
+                'result.html',
+                image_uploaded=('file' in request.files),
+                uploaded_filename=os.path.basename(image_path) if ('file' in request.files) else None,
+                image_path=image_path,
+                document_type=doc_type,
+                text=text,
+                structured_json=structured_json,
+                json_name=json_name,
+                pdf_name=pdf_name,
+                summary_name=summary_name
+            )
+        return jsonify(response_payload)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/files/<path:filename>')
+def serve_generated_file(filename):
+    return send_from_directory('extracted_jsons', filename)
+
+@app.route('/uploads/<path:filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory('uploads', filename)
+
+@app.route('/browse', methods=['GET'])
+def browse_outputs():
+    ensure_directory('extracted_jsons')
+    files = sorted(os.listdir('extracted_jsons'))
+    # Group by base name
+    grouped = {}
+    for name in files:
+        base, ext = os.path.splitext(name)
+        grouped.setdefault(base, []).append(name)
+    items = []
+    for base, names in grouped.items():
+        items.append({
+            'base': base,
+            'json': f'{base}.json' if f'{base}.json' in names else None,
+            'pdf': f'{base}.pdf' if f'{base}.pdf' in names else None,
+            'summary': f'{base}_summary.txt' if f'{base}_summary.txt' in names else None
+        })
+    return render_template('browse.html', items=sorted(items, key=lambda x: x['base']))
+
+if __name__ == '__main__':
+    # Start the Flask app instead of running the CLI loop
+    app.run(host='0.0.0.0', port=5000)

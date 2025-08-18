@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document OCR</title>
+	<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+	<header class="site-header">
+		<h1>Document OCR</h1>
+	</header>
+	<main class="container">
+		<section class="card">
+			<h2>Upload an Image</h2>
+			<form action="/process?html=1" method="post" enctype="multipart/form-data">
+				<input type="file" name="file" accept="image/*" required>
+				<button type="submit">Process</button>
+			</form>
+		</section>
+
+	</main>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OCR Result</title>
+	<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+	<header class="site-header">
+		<h1>OCR Result</h1>
+		<nav><a href="/">Home</a> | <a href="/browse">Browse</a></nav>
+	</header>
+	<main class="container">
+		<section class="card">
+			<h2>Summary</h2>
+			<p><strong>Document Type:</strong> {{ document_type }}</p>
+			{% if uploaded_filename %}
+			<p><strong>Uploaded File:</strong> <a href="/uploads/{{ uploaded_filename }}" target="_blank">{{ uploaded_filename }}</a></p>
+			{% endif %}
+		</section>
+
+		<section class="card">
+			<h2>Extracted Text</h2>
+			<pre class="prewrap">{{ text }}</pre>
+		</section>
+
+		<section class="card">
+			<h2>Structured JSON</h2>
+			<pre class="prewrap">{{ structured_json | tojson(indent=2) }}</pre>
+		</section>
+
+		<section class="card">
+			<h2>Downloads</h2>
+			<ul>
+				<li><a href="/files/{{ json_name }}" target="_blank">JSON</a></li>
+				<li><a href="/files/{{ pdf_name }}" target="_blank">PDF</a></li>
+				<li><a href="/files/{{ summary_name }}" target="_blank">Summary</a></li>
+			</ul>
+		</section>
+	</main>
+</body>
+</html>

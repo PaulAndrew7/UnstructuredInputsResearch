@@ -42,13 +42,38 @@
 ```
 
 
-### Basic Usage
+### Running the Flask API
 
-1. **Place your images** in the `images/` directory
-2. **Run the processing script**
+1. **Place your images** in the `images/` directory (optional if you will upload via API)
+2. **Start the server**
    ```bash
    python main.py
    ```
+
+The server will start on `http://localhost:5000`.
+
+### API Endpoints
+
+- **GET `/health`**
+  - Returns server status.
+  - Example:
+    ```bash
+    curl http://localhost:5000/health
+    ```
+
+- **POST `/process`**
+  - Process a single image.
+  - Send either a multipart file under key `file` OR a JSON body with `image_path` pointing to an existing file on the server.
+  - Examples:
+    ```bash
+    # Upload a file
+    curl -X POST http://localhost:5000/process -F "file=@images/prescription1.jpg"
+
+    # Or reference an existing path on the server
+    curl -X POST http://localhost:5000/process -H "Content-Type: application/json" \
+      -d '{"image_path": "images/prescription1.jpg"}'
+    ```
+
 
 ### Supported Image Formats
 - JPG/JPEG

@@ -1,0 +1,13 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f6f7fb; color: #1e1e1e; }
+.site-header { background: #24292f; color: #fff; padding: 16px 24px; }
+.site-header a { color: #fff; text-decoration: none; }
+.container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+input[type="file"], input[type="text"] { display: block; margin: 8px 0 12px; }
+button, .button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 10px 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+button:hover, .button:hover { background: #1d4ed8; }
+.prewrap { white-space: pre-wrap; word-wrap: break-word; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+.error { color: #b91c1c; }
