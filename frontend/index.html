@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Document OCR – Frontend</title>
+	<style>
+		* { box-sizing: border-box; }
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f6f7fb; color: #1e1e1e; }
+		.header { background: #24292f; color: #fff; padding: 16px 24px; }
+		.container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+		.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+		label { display: block; margin: 8px 0; }
+		input[type="text"] { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+		input[type="file"] { display: block; margin: 8px 0 12px; }
+		button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 10px 14px; cursor: pointer; }
+		button[disabled] { opacity: .6; cursor: not-allowed; }
+		pre { white-space: pre-wrap; word-wrap: break-word; background: #0b1021; color: #e5e7eb; padding: 12px; border-radius: 8px; overflow-x: auto; }
+		.small { color: #6b7280; font-size: 12px; }
+		.error { color: #b91c1c; }
+	</style>
+</head>
+<body>
+	<header class="header">
+		<h1>Document OCR</h1>
+	</header>
+	<main class="container">
+		<section class="card">
+			<h2>Backend configuration</h2>
+			<label>Backend URL (your public Tailscale Funnel URL or local URL)
+				<input id="backendUrl" type="text" placeholder="https://kaltsit.taileac2a8.ts.net/">
+			</label>
+			<div class="small">Example: https://kaltsit.taileac2a8.ts.net</div>
+		</section>
+
+		<section class="card">
+			<h2>Upload and process</h2>
+			<input id="file" type="file" accept="image/*">
+			<button id="go">Process</button>
+			<span id="status" class="small"></span>
+			<div id="err" class="error"></div>
+		</section>
+
+		<section id="result" class="card" style="display:none;">
+			<h2>Result</h2>
+			<p><strong>Document Type:</strong> <span id="docType"></span></p>
+			<h3>Extracted Text</h3>
+			<pre id="text"></pre>
+			<h3>Structured JSON</h3>
+			<pre id="json"></pre>
+		</section>
+	</main>
+
+	<script>
+	(function() {
+		const backendInput = document.getElementById('backendUrl');
+		const fileInput = document.getElementById('file');
+		const goBtn = document.getElementById('go');
+		const statusEl = document.getElementById('status');
+		const errEl = document.getElementById('err');
+		const resultSection = document.getElementById('result');
+		const docTypeEl = document.getElementById('docType');
+		const textEl = document.getElementById('text');
+		const jsonEl = document.getElementById('json');
+
+		// Restore backend URL from localStorage
+		backendInput.value = localStorage.getItem('ocr_backend_url') || '';
+		backendInput.addEventListener('change', () => {
+			localStorage.setItem('ocr_backend_url', backendInput.value.trim());
+		});
+
+		function setBusy(b) {
+			goBtn.disabled = b;
+			statusEl.textContent = b ? 'Processing…' : '';
+			errEl.textContent = '';
+		}
+
+		async function process() {
+			const backend = (backendInput.value || '').trim().replace(/\/?$/,'');
+			if (!backend) { errEl.textContent = 'Enter your backend URL first.'; return; }
+			if (!fileInput.files || !fileInput.files[0]) { errEl.textContent = 'Choose an image file.'; return; }
+
+			setBusy(true);
+			resultSection.style.display = 'none';
+			try {
+				const fd = new FormData();
+				fd.append('file', fileInput.files[0]);
+				const resp = await fetch(backend + '/process', { method: 'POST', body: fd });
+				if (!resp.ok) {
+					const t = await resp.text();
+					throw new Error('Request failed: ' + resp.status + ' ' + t);
+				}
+				const data = await resp.json();
+				docTypeEl.textContent = data.document_type || 'unknown';
+				textEl.textContent = data.text || '';
+				jsonEl.textContent = JSON.stringify(data.structured_json || {}, null, 2);
+				resultSection.style.display = '';
+			} catch (e) {
+				errEl.textContent = e.message || String(e);
+			} finally {
+				setBusy(false);
+			}
+		}
+
+		goBtn.addEventListener('click', process);
+	})();
+	</script>
+</body>
+</html>

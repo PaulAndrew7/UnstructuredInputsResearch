@@ -1,0 +1,15 @@
+{
+  "document_type": "prescription",
+  "medications": [
+    {
+      "name": "bsTID\nOxprelol 50mg eitabQQ",
+      "dosage": "50mg",
+      "frequency": "TID"
+    },
+    {
+      "name": "bsTID\nOxprelol 50mg eitabQQ",
+      "dosage": "50mg",
+      "frequency": "TID"
+    }
+  ]
+}

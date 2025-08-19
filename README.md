@@ -88,3 +88,47 @@ For each processed image, the system generates:
 - `{filename}.pdf` - Professional PDF with tabular data
 - `{filename}_summary.txt` - Content summary
 
+### Deployment
+
+You can run the app and Ollama together on a VM using Docker Compose, or point the app to a remote Ollama server.
+
+Environment variables (optional):
+- `OLLAMA_API_BASE` (default: `http://localhost:11434`)
+- `OLLAMA_MODEL` (default: `mistral`)
+ - `FRONTEND_ORIGIN` (for CORS; e.g., `https://yourpage.github.io`)
+
+Example (pointing to a remote Ollama):
+```bash
+set OLLAMA_API_BASE=http://<ollama-host>:11434  # Windows CMD
+set OLLAMA_MODEL=mistral
+python main.py
+```
+
+#### Docker (app only)
+```bash
+docker build -t ocr-app .
+docker run -p 5000:5000 -e OLLAMA_API_BASE=http://host.docker.internal:11434 -e OLLAMA_MODEL=mistral ocr-app
+```
+
+#### Docker Compose (app + Ollama)
+Use the provided `docker-compose.yml` to run both services. This pulls Ollama, starts the API, and runs the app configured to call `http://ollama:11434`.
+
+```bash
+docker compose up --build
+```
+
+Then open `http://localhost:5000`.
+
+### Using a static frontend (e.g., GitHub Pages)
+- This backend can be called from a static site via fetch/XHR over HTTPS.
+- Set `FRONTEND_ORIGIN` to your static site origin (e.g., `https://<user>.github.io`) to restrict CORS in production.
+- Example fetch from a static site:
+```js
+fetch('https://<your-public-backend-url>/process', {
+  method: 'POST',
+  body: (() => { const f = new FormData(); f.append('file', fileInput.files[0]); return f; })()
+})
+  .then(r => r.json())
+  .then(console.log)
+```
+

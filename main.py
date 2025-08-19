@@ -8,6 +8,11 @@ import requests
 import demjson3
 import glob
 from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
+from flask_cors import CORS
+
+# Deployment/config
+OLLAMA_API_BASE = os.environ.get('OLLAMA_API_BASE', 'http://localhost:11434')
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'mistral')
 from werkzeug.utils import secure_filename
 
 
@@ -121,9 +126,9 @@ Return only the JSON object.
     print("=== PROMPT SENT TO MODEL ===")
     print(prompt)
     response = requests.post(
-        "http://localhost:11434/api/generate",
+        f"{OLLAMA_API_BASE}/api/generate",
         json={
-            "model": "mistral",  # or "phi", "llama2", etc.
+            "model": OLLAMA_MODEL,  # or "phi", "llama2", etc.
             "prompt": prompt,
             "stream": False
         }
@@ -310,9 +315,9 @@ Data:
 {json.dumps(structured_json, indent=2)}
 """
     response = requests.post(
-        "http://localhost:11434/api/generate",
+        f"{OLLAMA_API_BASE}/api/generate",
         json={
-            "model": "mistral",  # or "phi", "llama2", etc.
+            "model": OLLAMA_MODEL,  # or "phi", "llama2", etc.
             "prompt": prompt,
             "stream": False
         }
@@ -428,6 +433,12 @@ def main_process(image_path):
     return text, doc_type, structured_json
 
 app = Flask(__name__)
+FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN')
+if FRONTEND_ORIGIN:
+    CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
+else:
+    # Default: allow all origins for development; set FRONTEND_ORIGIN in production
+    CORS(app)
 
 def ensure_directory(path):
     os.makedirs(path, exist_ok=True)

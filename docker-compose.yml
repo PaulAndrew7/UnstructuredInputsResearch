@@ -1,0 +1,31 @@
+version: '3.9'
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    command: ["serve"]
+
+  app:
+    build: .
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_API_BASE=http://ollama:11434
+      - OLLAMA_MODEL=mistral
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - extracted_jsons:/app/extracted_jsons
+      - uploads:/app/uploads
+      - text_extract:/app/text_extract
+
+volumes:
+  ollama_data:
+  extracted_jsons:
+  uploads:
+  text_extract:
