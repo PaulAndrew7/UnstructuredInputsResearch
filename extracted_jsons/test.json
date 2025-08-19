@@ -1,15 +1,32 @@
 {
   "document_type": "prescription",
-  "medications": [
-    {
-      "name": "bsTID\nOxprelol 50mg eitabQQ",
-      "dosage": "50mg",
-      "frequency": "TID"
-    },
-    {
-      "name": "bsTID\nOxprelol 50mg eitabQQ",
-      "dosage": "50mg",
-      "frequency": "TID"
-    }
-  ]
+  "prescription_number": "DDony1289",
+  "issued_date": "1NOV/71",
+  "doctor_name": "SeneeaePNOUx2CocNboetrstrhlt!",
+  "patient_fullname": "(Missing, only 'For' keyword provided with no values)",
+  "patient_address": "(Missing)",
+  "patient_phone_number": "(Missing, if under 12, age should be provided instead)",
+  "age": "(Missing, if under 12, age should be provided instead)",
+  "medication": {
+    "name": "Talludeyra",
+    "strength": "120ene",
+    "instructions": "(Subscription missing)"
+  },
+  "pharmacy_name": "WtflFobatior/",
+  "doctor_signature": "(Signa missing)",
+  "medical_facility": {
+    "name": "US.S.Neverforgotten(bb/78)",
+    "date": "(Missing)"
+  },
+  "second_medical_facility": {
+    "name": "US.S.Weverforgotten(00/78) 2JanI9",
+    "date": "(Missing)"
+  },
+  "br_superscription": "BR (Superscription) gmorml.",
+  "manufacturer": "MFGR: eth",
+  "lot_number": "LOTNO:39K/06",
+  "prescribing_doctor": "fockR.Frest",
+  "prescription_issued_at": "40072 LODR.WD.USWR",
+  "prescription_edition": "EDITIONOF1JAN60MAYBEUSEDFOR",
+  "prescription_number_sequence": "S/N0102-LF-012-6201"
 }
